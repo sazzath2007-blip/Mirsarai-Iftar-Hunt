@@ -30,7 +30,6 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [caption, setCaption] = useState('');
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -287,7 +286,6 @@ export default function App() {
                 </div>
 
                 <div 
-                  onClick={() => fileInputRef.current?.click()}
                   className="aspect-video bg-primary/5 rounded-3xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center cursor-pointer hover:border-accent/30 transition-all overflow-hidden relative"
                 >
                   {photoPreview ? (
@@ -300,10 +298,10 @@ export default function App() {
                   )}
                   <input 
                     type="file" 
-                    ref={fileInputRef} 
                     onChange={handlePhotoSelect} 
                     accept="image/*" 
-                    className="hidden" 
+                    capture="environment"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
                   />
                 </div>
 
