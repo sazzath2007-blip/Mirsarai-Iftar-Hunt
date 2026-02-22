@@ -30,6 +30,8 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [caption, setCaption] = useState('');
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -48,12 +50,45 @@ export default function App() {
     setFeed(data);
   };
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (base64Str: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1080;
+        const MAX_HEIGHT = 1080;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+    });
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        const compressed = await compressImage(base64);
+        setPhotoPreview(compressed);
       };
       reader.readAsDataURL(file);
     }
@@ -61,25 +96,40 @@ export default function App() {
 
   const handleSubmit = async () => {
     if (!selectedTask || !userName || !photoPreview) return;
+    setIsSubmitting(true);
 
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        taskId: selectedTask.id,
-        userName,
-        photoData: photoPreview,
-        caption
-      }),
-    });
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: selectedTask.id,
+          userName,
+          photoData: photoPreview,
+          caption
+        }),
+      });
 
-    if (res.ok) {
-      setIsUploading(false);
-      setSelectedTask(null);
-      setPhotoPreview(null);
-      setCaption('');
-      fetchFeed();
-      setActiveTab('feed');
+      if (res.ok) {
+        setUploadSuccess(true);
+        setTimeout(() => {
+          setIsUploading(false);
+          setUploadSuccess(false);
+          setSelectedTask(null);
+          setPhotoPreview(null);
+          setCaption('');
+          fetchFeed();
+          setActiveTab('feed');
+          setIsSubmitting(false);
+        }, 1500);
+      } else {
+        setIsSubmitting(false);
+        alert('Upload failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setIsSubmitting(false);
+      alert('An error occurred during upload.');
     }
   };
 
@@ -297,6 +347,7 @@ export default function App() {
                     </>
                   )}
                   <input 
+                    key={selectedTask?.id || 'none'}
                     type="file" 
                     onChange={handlePhotoSelect} 
                     accept="image/*" 
@@ -304,6 +355,9 @@ export default function App() {
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
                   />
                 </div>
+                <p className="text-[10px] text-primary/40 text-center -mt-4">
+                  Tip: Allow camera access to snap a photo directly.
+                </p>
 
                 <div className="space-y-4">
                   <div>
@@ -329,11 +383,27 @@ export default function App() {
 
                 <button 
                   onClick={handleSubmit}
-                  disabled={!photoPreview || !userName}
-                  className="w-full py-4 bg-primary text-white rounded-2xl font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                  disabled={!photoPreview || !userName || isSubmitting}
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 flex items-center justify-center gap-2 relative overflow-hidden"
                 >
-                  <Check className="w-5 h-5" />
-                  Submit to Feed
+                  {isSubmitting ? (
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    >
+                      <Plus className="w-5 h-5" />
+                    </motion.div>
+                  ) : uploadSuccess ? (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-2">
+                      <Check className="w-5 h-5" />
+                      Success!
+                    </motion.div>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      Submit to Feed
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
