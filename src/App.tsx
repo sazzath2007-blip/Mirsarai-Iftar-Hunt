@@ -35,6 +35,7 @@ export default function App() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const globalFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -146,24 +147,41 @@ export default function App() {
   const handlePlusClick = async () => {
     let currentTasks = tasks;
     if (currentTasks.length === 0) {
-      const res = await fetch('/api/tasks');
-      currentTasks = await res.json();
-      setTasks(currentTasks);
+      try {
+        const res = await fetch('/api/tasks');
+        currentTasks = await res.json();
+        setTasks(currentTasks);
+      } catch (e) {
+        console.error("Failed to fetch tasks", e);
+      }
     }
     
     const generalTask = currentTasks.find(t => t.title === 'General Discovery') || currentTasks[0];
-    if (generalTask) {
-      setSelectedTask(generalTask);
-      setIsUploading(true);
-    } else {
-      // Fallback if still no tasks
-      setSelectedTask({ id: 999, title: 'General Discovery', description: 'Share your moment', points: 5 });
-      setIsUploading(true);
-    }
+    setSelectedTask(generalTask || { id: 999, title: 'General Discovery', description: 'Share your moment', points: 5 });
+    globalFileInputRef.current?.click();
+  };
+
+  const handleTaskCameraClick = (task: Task) => {
+    setSelectedTask(task);
+    globalFileInputRef.current?.click();
   };
 
   return (
     <div className="min-h-screen font-sans pb-20">
+      {/* Hidden Global File Input */}
+      <input 
+        type="file"
+        ref={globalFileInputRef}
+        onChange={(e) => {
+          handlePhotoSelect(e);
+          setIsUploading(true);
+          e.target.value = '';
+        }}
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+      />
+
       {/* Header */}
       <header className="bg-primary text-warm-bg border-b border-accent/20 sticky top-0 z-30 px-6 py-6 shadow-xl">
         <div className="max-w-2xl mx-auto flex justify-between items-center relative">
@@ -253,10 +271,7 @@ export default function App() {
                     <p className="text-sm text-primary/60 leading-relaxed">{task.description}</p>
                   </div>
                   <button 
-                    onClick={() => {
-                      setSelectedTask(task);
-                      setIsUploading(true);
-                    }}
+                    onClick={() => handleTaskCameraClick(task)}
                     className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-accent transition-colors shadow-lg shadow-primary/20"
                   >
                     <Camera className="w-5 h-5" />
