@@ -190,7 +190,7 @@ export default function App() {
           </div>
           <div className="relative z-10">
             <h1 className="text-3xl font-bold serif italic text-accent flex items-center gap-2">
-              Mirsarai Iftar Hunt
+              Mirsarai shera ifter
               <Sparkles className="w-5 h-5 animate-pulse" />
             </h1>
             <p className="text-[10px] text-accent/70 uppercase tracking-[0.3em] font-bold">Ramadan Kareem • 1447 AH</p>
