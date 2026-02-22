@@ -91,6 +91,14 @@ export default function App() {
     }
   };
 
+  const handlePlusClick = () => {
+    const generalTask = tasks.find(t => t.title === 'General Discovery') || tasks[0];
+    if (generalTask) {
+      setSelectedTask(generalTask);
+      setIsUploading(true);
+    }
+  };
+
   return (
     <div className="min-h-screen font-sans pb-20">
       {/* Header */}
@@ -100,7 +108,14 @@ export default function App() {
             <h1 className="text-2xl font-semibold serif text-primary italic">Mirsarai Iftar Hunt</h1>
             <p className="text-xs text-primary/60 uppercase tracking-widest font-medium">Ramadan 2026</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handlePlusClick}
+              className="hidden md:flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg shadow-accent/20 hover:bg-accent/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Discovery
+            </button>
             <div className="bg-primary/5 px-3 py-1 rounded-full flex items-center gap-1.5">
               <Trophy className="w-4 h-4 text-accent" />
               <span className="text-sm font-medium text-primary">Leaderboard</span>
@@ -331,8 +346,8 @@ export default function App() {
       {/* Floating Action Button (Mobile) */}
       <div className="fixed bottom-8 right-8 z-40 md:hidden">
         <button 
-          onClick={() => setActiveTab('tasks')}
-          className="w-14 h-14 rounded-full bg-accent text-white shadow-xl flex items-center justify-center"
+          onClick={handlePlusClick}
+          className="w-14 h-14 rounded-full bg-accent text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
         >
           <Plus className="w-6 h-6" />
         </button>

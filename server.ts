@@ -36,7 +36,8 @@ if (taskCount.count === 0) {
     ["Sunset at Mahamaya Lake", "Capture the golden hour at the beautiful Mahamaya Lake.", 20],
     ["Unique Mosque Lighting", "Find a mosque with beautiful or unique Ramadan decorations.", 15],
     ["Iftar Table Spread", "Show us your delicious home or restaurant Iftar spread.", 10],
-    ["The Busy Bazar Rush", "Capture the energy of the Mirsarai Bazar just before Iftar.", 10]
+    ["The Busy Bazar Rush", "Capture the energy of the Mirsarai Bazar just before Iftar.", 10],
+    ["General Discovery", "Share any special moment or find from your Mirsarai journey.", 5]
   ];
   for (const task of initialTasks) {
     insertTask.run(task[0], task[1], task[2]);
