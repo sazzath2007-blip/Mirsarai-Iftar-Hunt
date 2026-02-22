@@ -16,7 +16,10 @@ import {
   Utensils,
   Sun,
   Moon,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MoonStar,
+  Sparkles,
+  Compass
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Task, Upload } from './types';
@@ -140,10 +143,21 @@ export default function App() {
     }
   };
 
-  const handlePlusClick = () => {
-    const generalTask = tasks.find(t => t.title === 'General Discovery') || tasks[0];
+  const handlePlusClick = async () => {
+    let currentTasks = tasks;
+    if (currentTasks.length === 0) {
+      const res = await fetch('/api/tasks');
+      currentTasks = await res.json();
+      setTasks(currentTasks);
+    }
+    
+    const generalTask = currentTasks.find(t => t.title === 'General Discovery') || currentTasks[0];
     if (generalTask) {
       setSelectedTask(generalTask);
+      setIsUploading(true);
+    } else {
+      // Fallback if still no tasks
+      setSelectedTask({ id: 999, title: 'General Discovery', description: 'Share your moment', points: 5 });
       setIsUploading(true);
     }
   };
@@ -151,51 +165,63 @@ export default function App() {
   return (
     <div className="min-h-screen font-sans pb-20">
       {/* Header */}
-      <header className="bg-white border-b border-primary/10 sticky top-0 z-30 px-6 py-4">
-        <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold serif text-primary italic">Mirsarai Iftar Hunt</h1>
-            <p className="text-xs text-primary/60 uppercase tracking-widest font-medium">Ramadan 2026</p>
+      <header className="bg-primary text-warm-bg border-b border-accent/20 sticky top-0 z-30 px-6 py-6 shadow-xl">
+        <div className="max-w-2xl mx-auto flex justify-between items-center relative">
+          <div className="absolute -top-4 -left-8 opacity-20 pointer-events-none">
+            <MoonStar className="w-24 h-24 text-accent rotate-12" />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold serif italic text-accent flex items-center gap-2">
+              Mirsarai Iftar Hunt
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </h1>
+            <p className="text-[10px] text-accent/70 uppercase tracking-[0.3em] font-bold">Ramadan Kareem • 1447 AH</p>
+          </div>
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="hidden md:flex bg-accent/20 px-3 py-1 rounded-full items-center gap-1.5 border border-accent/30">
+              <Trophy className="w-4 h-4 text-accent" />
+              <span className="text-xs font-bold text-accent uppercase tracking-wider">Leaderboard</span>
+            </div>
             <button 
               onClick={handlePlusClick}
-              className="hidden md:flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg shadow-accent/20 hover:bg-accent/90 transition-colors"
+              className="bg-accent text-primary px-5 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-black/20 hover:scale-105 transition-transform flex items-center gap-2 border-2 border-primary/20"
             >
               <Plus className="w-4 h-4" />
-              Add Discovery
+              <span className="hidden sm:inline">Add Discovery</span>
             </button>
-            <div className="bg-primary/5 px-3 py-1 rounded-full flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium text-primary">Leaderboard</span>
-            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-8">
         {/* Tabs */}
-        <div className="flex gap-8 mb-8 border-b border-primary/10">
+        <div className="flex gap-10 mb-10 border-b border-primary/10 justify-center">
           <button 
             onClick={() => setActiveTab('tasks')}
-            className={`pb-4 text-sm font-medium transition-all relative ${
-              activeTab === 'tasks' ? 'text-primary' : 'text-primary/40'
+            className={`pb-4 text-sm font-bold uppercase tracking-widest transition-all relative ${
+              activeTab === 'tasks' ? 'text-primary' : 'text-primary/30'
             }`}
           >
-            Hunt Tasks
+            <div className="flex items-center gap-2">
+              <Compass className="w-4 h-4" />
+              The Hunt
+            </div>
             {activeTab === 'tasks' && (
-              <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-accent rounded-t-full" />
             )}
           </button>
           <button 
             onClick={() => setActiveTab('feed')}
-            className={`pb-4 text-sm font-medium transition-all relative ${
-              activeTab === 'feed' ? 'text-primary' : 'text-primary/40'
+            className={`pb-4 text-sm font-bold uppercase tracking-widest transition-all relative ${
+              activeTab === 'feed' ? 'text-primary' : 'text-primary/30'
             }`}
           >
-            Community Feed
+            <div className="flex items-center gap-2">
+              <MoonStar className="w-4 h-4" />
+              Community
+            </div>
             {activeTab === 'feed' && (
-              <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-accent rounded-t-full" />
             )}
           </button>
         </div>
@@ -336,14 +362,25 @@ export default function App() {
                 </div>
 
                 <div 
-                  className="aspect-video bg-primary/5 rounded-3xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center cursor-pointer hover:border-accent/30 transition-all overflow-hidden relative"
+                  className="aspect-video bg-primary/5 rounded-3xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center cursor-pointer hover:border-accent/30 transition-all overflow-hidden relative shadow-inner"
                 >
                   {photoPreview ? (
-                    <img src={photoPreview} className="w-full h-full object-cover" alt="Preview" />
+                    <div className="relative w-full h-full">
+                      <img src={photoPreview} className="w-full h-full object-cover" alt="Preview" />
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setPhotoPreview(null); }}
+                        className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   ) : (
                     <>
-                      <Camera className="w-8 h-8 text-primary/20 mb-2" />
-                      <p className="text-xs text-primary/40 font-medium">Tap to take or upload photo</p>
+                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-3">
+                        <Camera className="w-8 h-8 text-accent" />
+                      </div>
+                      <p className="text-sm text-primary/60 font-bold serif italic">Snap your Ramadan moment</p>
+                      <p className="text-[10px] text-primary/40 uppercase tracking-widest mt-1">Tap to open camera</p>
                     </>
                   )}
                   <input 

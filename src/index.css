@@ -5,9 +5,10 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", serif;
   
-  --color-primary: #5A5A40; /* Olive */
-  --color-accent: #FF6321; /* Orange */
-  --color-warm-bg: #f5f5f0;
+  --color-primary: #064e3b; /* Deep Ramadan Green */
+  --color-accent: #fbbf24; /* Islamic Gold */
+  --color-warm-bg: #fffbeb; /* Warm Cream */
+  --color-night: #020617;
 }
 
 body {
